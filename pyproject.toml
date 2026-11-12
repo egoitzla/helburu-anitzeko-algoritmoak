@@ -1,0 +1,24 @@
+[project]
+name = "helburu-anitzeko-algoritmoak"
+version = "0.1.0"
+description = "NSGA-II, SPEA2 eta DE (GDE3) TNK problemaren gainean: Streamlit aplikazioa eta notebook-ak."
+readme = "README.md"
+authors = [
+    { name = "egoitzla" }
+]
+requires-python = ">=3.14"
+dependencies = [
+    "streamlit>=1.67",
+    "plotly>=7.1",
+    "numpy>=2.5",
+    "pandas>=3.1",
+    "matplotlib>=3.11",
+]
+
+[dependency-groups]
+dev = [
+    "ipykernel>=7.4",
+]
+
+[tool.uv]
+package = false

@@ -1,0 +1,15 @@
+# Ingurunea
+.venv/
+__pycache__/
+*.pyc
+.ipynb_checkpoints/
+
+# Script-ek sortutako irudiak
+pareto_frontea*.png
+
+# Sistema eta editoreak
+.DS_Store
+.claude/
+.agents/
+.vscode/
+.idea/
