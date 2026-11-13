@@ -27,7 +27,7 @@ with st.sidebar:
     st.header("Bistaratzea")
     dominioa = st.toggle("Domeinu osoa ikusi [0, π]²", value=False, key="dominioa")
     erref = st.toggle("Benetako frontea erakutsi (erreferentzia)", value=True, key="erref")
-    populazioa = st.toggle("Populazioa erakutsi (SPEA2)", value=True, key="populazioa",
+    populazioa = st.toggle("Populazioa erakutsi (SPEA2)", value=False, key="populazioa",
                            help="Kanpoko artxiboa duten algoritmoetan (SPEA2): desaktibatuta, "
                                 "artxiboa bakarrik erakusten da, populazioko seme-alabak gabe.")
     abiadura = st.slider("Milisegundo urratseko", 20, 500, 80, step=10, key="abiadura")
