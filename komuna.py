@@ -37,10 +37,14 @@ POPULAZIO_ESTILOAK = [
 ]
 
 
-def populazio_estiloak(artxiboa_du, legenda=True):
-    """Populazioaren 4 trazen estiloak. Artxiborik ez badago, haren legenda ezkutatu."""
+def populazio_estiloak(artxiboa_du, legenda=True, populazioa_ezkutuan=False):
+    """Populazioaren 4 trazen estiloak. Artxiborik ez badago, haren legenda ezkutatu;
+    populazioa ezkutuan badago, populazioaren hiru trazena."""
     estiloak = [dict(e) for e in POPULAZIO_ESTILOAK]
     estiloak[3]["showlegend"] = artxiboa_du
+    if populazioa_ezkutuan:
+        for e in estiloak[:3]:
+            e["showlegend"] = False
     if not legenda:
         for e in estiloak:
             e["showlegend"] = False
@@ -205,10 +209,12 @@ def puntuak(zerrenda):
 
 
 def populazio_trazak(urratsa):
-    """Urrats bateko populazioaren 4 trazak (ez bideragarriak, besteak, 1. frontea, artxiboa)."""
+    """Urrats bateko populazioaren 4 trazak (ez bideragarriak, besteak, 1. frontea, artxiboa).
+    Artxiboa badago eta "Populazioa erakutsi" desaktibatuta badago, artxiboa bakarrik."""
+    ezkutatu = bool(urratsa["artxiboa"]) and not aukerak()["populazioa"]
+    multzoak = ([], [], []) if ezkutatu else (urratsa["ez_bid"], urratsa["beste"], urratsa["fronte"])
     return [go.Scatter(x=x, y=y) for x, y in
-            (puntuak(urratsa["ez_bid"]), puntuak(urratsa["beste"]), puntuak(urratsa["fronte"]),
-             puntuak(urratsa["artxiboa"]))]
+            (*(puntuak(m) for m in multzoak), puntuak(urratsa["artxiboa"]))]
 
 
 def oinarri_trazak(fig, row, col, showlegend=True):

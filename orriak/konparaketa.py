@@ -147,7 +147,11 @@ lerroa = lambda izena, legenda: dict(  # noqa: E731
     name=izena, mode="lines", showlegend=legenda, legend="legend2",
     line=dict(color=KOLOREAK[izena], width=2))
 artxiboa_du = any(u["artxiboa"] for u in A + B)
-estiloak = (komuna.populazio_estiloak(artxiboa_du)
+# Populazioaren legenda ezkutatu bi konfigurazioek artxiboa badute eta populazioa ezkutuan badago
+bietan_artxiboa = any(u["artxiboa"] for u in A) and any(u["artxiboa"] for u in B)
+estiloak = (komuna.populazio_estiloak(
+                artxiboa_du,
+                populazioa_ezkutuan=bietan_artxiboa and not komuna.aukerak()["populazioa"])
             + komuna.populazio_estiloak(artxiboa_du, legenda=False)
             + [lerroa("A", True), lerroa("B", True), lerroa("A", False), lerroa("B", False),
                lerroa("A", False), lerroa("B", False)])

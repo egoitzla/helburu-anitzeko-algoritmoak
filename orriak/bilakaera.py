@@ -82,7 +82,8 @@ fig = make_subplots(
 oinarri_kop = komuna.oinarri_trazak(fig, 1, 1)
 
 artxiboa_du = any(u["artxiboa"] for u in urratsak)
-estiloak = komuna.populazio_estiloak(artxiboa_du) + [
+estiloak = komuna.populazio_estiloak(
+    artxiboa_du, populazioa_ezkutuan=artxiboa_du and not komuna.aukerak()["populazioa"]) + [
     dict(name="Hiperbolumena", mode="lines", showlegend=False,
          line=dict(color=KOLOREAK["hv"], width=2)),
     dict(name="Hiperbolumena (balioa)", mode="lines", showlegend=False,
