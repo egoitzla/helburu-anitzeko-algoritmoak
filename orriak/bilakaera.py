@@ -81,7 +81,8 @@ fig = make_subplots(
 )
 oinarri_kop = komuna.oinarri_trazak(fig, 1, 1)
 
-estiloak = komuna.POPULAZIO_ESTILOAK + [
+artxiboa_du = any(u["artxiboa"] for u in urratsak)
+estiloak = komuna.populazio_estiloak(artxiboa_du) + [
     dict(name="Hiperbolumena", mode="lines", showlegend=False,
          line=dict(color=KOLOREAK["hv"], width=2)),
     dict(name="Hiperbolumena (balioa)", mode="lines", showlegend=False,
@@ -93,7 +94,7 @@ estiloak = komuna.POPULAZIO_ESTILOAK + [
     dict(name="1. frontean (kop.)", mode="lines", legend="legend2",
          line=dict(color=KOLOREAK["fronte"], width=2)),
 ]
-kokapenak = [(1, 1), (1, 1), (1, 1), (1, 2), (2, 2), (3, 2), (4, 2), (4, 2)]
+kokapenak = [(1, 1)] * 4 + [(1, 2), (2, 2), (3, 2), (4, 2), (4, 2)]
 hasiera = dinamikoak(0)
 for traza, estiloa, (r, c) in zip(hasiera, estiloak, kokapenak):
     traza.update(**estiloa)
@@ -134,7 +135,8 @@ komuna.grafikoa_erakutsi(fig)
 # Azken frontea: taula eta deskarga
 # ---------------------------------------------------------------------------
 with st.expander(f"Azken Pareto frontea ({azkena['n_fronte']} soluzio)"):
-    errenkadak = [{"x1": round(x[0], 6), "x2": round(x[1], 6)} for x in azkena["fronte"]]
+    # f = x soluzio bideragarrietan; artxiboa badago, artxiboaren frontea
+    errenkadak = [{"x1": round(x[0], 6), "x2": round(x[1], 6)} for x in azkena["fronte_csv"]]
     st.dataframe(errenkadak, width="stretch", height=260)
     buf = io.StringIO()
     idazlea = csv.DictWriter(buf, fieldnames=["x1", "x2"])
@@ -153,6 +155,9 @@ with st.expander("Nola irakurri"):
   populazioa ilargi-erdi grisaren barruan sartzen da.
 - **Ondoren**: gurutzaketak eta mutazioak puntuak $C_1$-en ertz uhindura aldera bultzatzen
   dituzte, eta dibertsitate-mekanismoak frontearen zati guztietan banatzen ditu.
+- **Kanpoko artxiboa duten algoritmoetan (SPEA2)**: puntu beteak belaunaldi horretako
+  populazioa dira, eta **zirkulu more hutsak artxiboa**. Artxiboa da algoritmoaren emaitza,
+  eta metrikak (hiperbolumena, IGD, 1. frontean) harekin kalkulatzen dira.
 
 **Metrikak** (eskuinean, animazioarekin batera hazten dira)
 

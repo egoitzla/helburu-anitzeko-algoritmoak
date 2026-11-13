@@ -146,11 +146,12 @@ oinarri_kop = komuna.oinarri_trazak(fig, 1, 1) + komuna.oinarri_trazak(fig, 1, 2
 lerroa = lambda izena, legenda: dict(  # noqa: E731
     name=izena, mode="lines", showlegend=legenda, legend="legend2",
     line=dict(color=KOLOREAK[izena], width=2))
-estiloak = (komuna.POPULAZIO_ESTILOAK
-            + [dict(e, showlegend=False) for e in komuna.POPULAZIO_ESTILOAK]
+artxiboa_du = any(u["artxiboa"] for u in A + B)
+estiloak = (komuna.populazio_estiloak(artxiboa_du)
+            + komuna.populazio_estiloak(artxiboa_du, legenda=False)
             + [lerroa("A", True), lerroa("B", True), lerroa("A", False), lerroa("B", False),
                lerroa("A", False), lerroa("B", False)])
-kokapenak = [(1, 1)] * 3 + [(1, 2)] * 3 + [(2, 1), (2, 1), (2, 2), (2, 2), (3, 1), (3, 1)]
+kokapenak = [(1, 1)] * 4 + [(1, 2)] * 4 + [(2, 1), (2, 1), (2, 2), (2, 2), (3, 1), (3, 1)]
 hasiera = dinamikoak(0)
 for traza, estiloa, (r, c) in zip(hasiera, estiloak, kokapenak):
     traza.update(**estiloa)

@@ -11,7 +11,7 @@ import streamlit as st
 import analisia
 import metrikak
 import nsga2
-from algoritmoak import ALGORITMOAK, EZ_BIDERAGARRIA
+from algoritmoak import ALGORITMOAK, EZ_BIDERAGARRIA, historia_eta_artxiboak
 from metrikak import ERREF_PUNTUA, HV_ATALASEA
 KOLOREAK = {
     "ez_bid": "#9aa0a6",
@@ -19,6 +19,7 @@ KOLOREAK = {
     "fronte": "#e45756",
     "hv": "#54a24b",
     "igd": "#b279a2",
+    "artxiboa": "#a855f7",
     "A": "#2a9d8f",
     "B": "#f58518",
 }
@@ -30,7 +31,20 @@ POPULAZIO_ESTILOAK = [
          marker=dict(size=7, color=KOLOREAK["beste"], opacity=0.75)),
     dict(name="1. frontea (ez-menderatuak)", mode="markers",
          marker=dict(size=8, color=KOLOREAK["fronte"], line=dict(width=0.5, color="white"))),
+    dict(name="Artxiboa", mode="markers",
+         marker=dict(symbol="circle-open", size=11, color=KOLOREAK["artxiboa"],
+                     line=dict(width=2))),
 ]
+
+
+def populazio_estiloak(artxiboa_du, legenda=True):
+    """Populazioaren 4 trazen estiloak. Artxiborik ez badago, haren legenda ezkutatu."""
+    estiloak = [dict(e) for e in POPULAZIO_ESTILOAK]
+    estiloak[3]["showlegend"] = artxiboa_du
+    if not legenda:
+        for e in estiloak:
+            e["showlegend"] = False
+    return estiloak
 
 
 # ---------------------------------------------------------------------------
@@ -61,30 +75,40 @@ def benetako_frontea(n=1500, muga=1.25):
 # ---------------------------------------------------------------------------
 @st.cache_data(show_spinner="Algoritmoa exekutatzen...")
 def exekutatu(algoritmoa, parametroak, hazia):
-    historia = ALGORITMOAK[algoritmoa]["exekutatu"](dict(parametroak), hazia)
+    historia, artxiboak = historia_eta_artxiboak(
+        ALGORITMOAK[algoritmoa]["exekutatu"](dict(parametroak), hazia))
 
     erref_frontea = benetako_frontea()
     erref_igd = erref_frontea[::4]           # IGD azkarrago kalkulatzeko
     hv_optimoa = metrikak.hiperbolumena(erref_frontea, ERREF_PUNTUA)
 
     urratsak = []
-    for populazioa in historia:
+    for g, populazioa in enumerate(historia):
         bideragarriak = [(x, f) for x, f in populazioa if f[0] != EZ_BIDERAGARRIA]
         ez_bid = [x for x, f in populazioa if f[0] == EZ_BIDERAGARRIA]
         F = [f for _, f in bideragarriak]
         lehena = set(metrikak.ez_menderatuak(F))
         fronte = sorted(bideragarriak[i][0] for i in lehena)
         beste = [x for i, (x, _) in enumerate(bideragarriak) if i not in lehena]
-        fronte_f = [F[i] for i in lehena]
+        if artxiboak is None:
+            artxiboa = []
+            fronte_f = [F[i] for i in lehena]
+        else:
+            # Kanpoko artxiboa: algoritmoaren emaitza da, eta metrikak harekin kalkulatzen dira
+            artxiboa = [x for x, _ in artxiboak[g]]
+            A_F = [f for _, f in artxiboak[g] if f[0] != EZ_BIDERAGARRIA]
+            fronte_f = [A_F[i] for i in metrikak.ez_menderatuak(A_F)]
         urratsak.append({
             "fronte": fronte,
             "beste": beste,
             "ez_bid": ez_bid,
+            "artxiboa": artxiboa,
             "hv": 100 * metrikak.hiperbolumena(fronte_f, ERREF_PUNTUA) / hv_optimoa,
             "hv_balioa": metrikak.hiperbolumena(fronte_f, ERREF_PUNTUA),
             "igd": metrikak.igd(fronte_f, erref_igd),
             "n_bid": len(bideragarriak),
-            "n_fronte": len(fronte),
+            "n_fronte": len(fronte_f),
+            "fronte_csv": sorted(tuple(f) for f in fronte_f),
         })
     return urratsak
 
@@ -181,9 +205,10 @@ def puntuak(zerrenda):
 
 
 def populazio_trazak(urratsa):
-    """Urrats bateko populazioaren 3 trazak (ez bideragarriak, besteak, 1. frontea)."""
+    """Urrats bateko populazioaren 4 trazak (ez bideragarriak, besteak, 1. frontea, artxiboa)."""
     return [go.Scatter(x=x, y=y) for x, y in
-            (puntuak(urratsa["ez_bid"]), puntuak(urratsa["beste"]), puntuak(urratsa["fronte"]))]
+            (puntuak(urratsa["ez_bid"]), puntuak(urratsa["beste"]), puntuak(urratsa["fronte"]),
+             puntuak(urratsa["artxiboa"]))]
 
 
 def oinarri_trazak(fig, row, col, showlegend=True):

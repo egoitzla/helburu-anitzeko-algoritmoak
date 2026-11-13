@@ -8,6 +8,9 @@ Algoritmo berri bat gehitzeko, ALGORITMOAK hiztegian sarrera bat gehitu:
   - "exekutatu": funtzioa(parametroak: dict, hazia: int) -> historia,
         non historia[k] = k. urratseko soluzioen zerrenda [(x, f), ...]
         eta soluzio ez bideragarriek f = (EZ_BIDERAGARRIA, EZ_BIDERAGARRIA) duten.
+        Kanpoko artxiboa duten algoritmoek {"historia": ..., "artxiboak": ...}
+        itzul dezakete: historia = populazioa, artxiboak[k] = k. urratseko artxiboa.
+        Kasu horretan metrikak artxiboarekin kalkulatzen dira.
 """
 import gde3
 import nsga2
@@ -36,9 +39,12 @@ def _spea2_exekutatu(p, hazia):
     spea2.ETA_C = p["eta_c"]
     spea2.ETA_M = p["eta_m"]
     spea2.HAZIA = hazia
-    historia = []
-    spea2.spea2(historia=historia, isilik=True)
-    return [list(zip(A, A_helb)) for A, A_helb in historia]
+    artxiboak, populazioak = [], []
+    spea2.spea2(historia=artxiboak, isilik=True, populazioak=populazioak)
+    return {
+        "historia": [list(zip(P, P_helb)) for P, P_helb in populazioak],
+        "artxiboak": [list(zip(A, A_helb)) for A, A_helb in artxiboak],
+    }
 
 
 def _gde3_exekutatu(p, hazia):
@@ -70,7 +76,7 @@ ALGORITMOAK = {
     "SPEA2": {
         "deskribapena": "Kanpoko artxiboa + egokitasuna F = H + D (indarra eta k-NN "
                         "dentsitatea), artxiboaren trunkatzea, SBX gurutzaketa eta "
-                        "mutazio polinomiala. Belaunaldi bakoitzean artxiboa erakusten da.",
+                        "mutazio polinomiala. Artxiboa beste kolore batean erakusten da.",
         "urratsa": "Belaunaldia",
         "parametroak": [
             ("n", "Populazioaren tamaina (N)", 20, 300, spea2.POP_TAMAINA, 10),
@@ -100,3 +106,10 @@ ALGORITMOAK = {
 }
 
 EZ_BIDERAGARRIA = nsga2.EZ_BIDERAGARRIA
+
+
+def historia_eta_artxiboak(emaitza):
+    """exekutatu()-ren emaitza (populazioak, artxiboak edo None) bihurtu."""
+    if isinstance(emaitza, dict):
+        return emaitza["historia"], emaitza.get("artxiboak")
+    return emaitza, None

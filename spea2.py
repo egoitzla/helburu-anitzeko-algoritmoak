@@ -216,11 +216,13 @@ def ondorengoak_sortu(artxiboa, F):
 # ---------------------------------------------------------------------------
 # SPEA2 algoritmo nagusia
 # ---------------------------------------------------------------------------
-def spea2(historia=None, isilik=False):
+def spea2(historia=None, isilik=False, populazioak=None):
     """
     historia: zerrenda bat ematen bada, belaunaldi bakoitzeko artxiboa
     (A, A_helb) gordetzen da bertan (0. elementua = hasierako populaziotik
     lortutako artxiboa).
+    populazioak: zerrenda bat ematen bada, belaunaldi bakoitzean artxiboa
+    kalkulatzeko erabilitako populazioa (P, P_helb) gordetzen da bertan.
     """
     random.seed(HAZIA)
 
@@ -231,6 +233,9 @@ def spea2(historia=None, isilik=False):
     A, A_helb = [], []
 
     for belaunaldia in range(BELAUNALDIAK + 1):
+        if populazioak is not None:
+            populazioak.append(([x[:] for x in P], list(P_helb)))
+
         # 2. Egokitasuna P ∪ A osoan kalkulatu
         R, R_helb = P + A, P_helb + A_helb
         F, dist = egokitasuna(R_helb)

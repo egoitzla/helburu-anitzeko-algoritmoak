@@ -16,7 +16,7 @@ from concurrent.futures import ProcessPoolExecutor, as_completed
 
 import metrikak
 import nsga2
-from algoritmoak import ALGORITMOAK, EZ_BIDERAGARRIA
+from algoritmoak import ALGORITMOAK, EZ_BIDERAGARRIA, historia_eta_artxiboak
 from metrikak import ERREF_PUNTUA, HV_ATALASEA
 
 
@@ -51,8 +51,11 @@ def exekuzio_bat(algoritmoa, parametroak, hazia):
     Itzultzen du: metriken hiztegia eta azken fronteko puntuak.
     """
     hasiera = time.perf_counter()
-    historia = ALGORITMOAK[algoritmoa]["exekutatu"](dict(parametroak), hazia)
+    historia, artxiboak = historia_eta_artxiboak(
+        ALGORITMOAK[algoritmoa]["exekutatu"](dict(parametroak), hazia))
     denbora = time.perf_counter() - hasiera
+    if artxiboak is not None:
+        historia = artxiboak       # kanpoko artxiboa da algoritmoaren emaitza
 
     erref = benetako_frontea()
     hv_optimoa = metrikak.hiperbolumena(erref, ERREF_PUNTUA)
