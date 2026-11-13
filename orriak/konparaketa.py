@@ -15,7 +15,7 @@ from komuna import HV_ATALASEA
 
 MIN_KONF, MAX_KONF = 2, 6
 IZENAK = "ABCDEF"
-KONF_KOLOREAK = ["#2a9d8f", "#f58518", "#17becf", "#e377c2", "#bcbd22", "#8c564b"]
+KONF_KOLOREAK = ["#2a9d8f", "#f58518", "#e377c2", "#bcbd22", "#17becf", "#8c564b"]
 ALGORITMO_IZENAK = list(ALGORITMOAK)
 
 
