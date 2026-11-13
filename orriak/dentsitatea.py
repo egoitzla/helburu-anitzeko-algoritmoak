@@ -3,6 +3,7 @@ Exekuzio anitzeko analisia: hainbat algoritmo, bakoitza N aldiz (hazi berdinekin
 prozesu paraleloetan. Metriken dentsitatea eta azken soluzioen dentsitatea frontean
 zehar, kurba gaussiarren bidez (KDE). CSV deskarga: lerro bat exekuzioko.
 """
+import math
 import os
 
 import numpy as np
@@ -21,6 +22,7 @@ ALG_KOLOREAK = ["#4c78a8", "#f58518", "#54a24b", "#e45756", "#b279a2", "#72b7b2"
 # (zutabea CSVan, etiketa, handiagoa hobea?)
 METRIKAK = [
     ("hv_ehunekoa", "Hiperbolumena (%) ↑", True),
+    ("hv_balioa", "Hiperbolumena (balioa) ↑", True),
     ("igd", "IGD ↓", False),
     ("konbergentzia_belaunaldia", f"HV ≥ {HV_ATALASEA:.0f} % belaunaldia ↓", False),
     ("denbora_s", "Denbora (s) ↓", False),
@@ -120,6 +122,7 @@ for alg, k, hazia, m, _ in res["emaitzak"]:
     lerroa.update({f"p_{izena}": balioa for izena, balioa in res["parametroak"][alg].items()})
     lerroa.update({
         "hv_ehunekoa": m["hv"],
+        "hv_balioa": m["hv_balioa"],
         "igd": m["igd"],
         "konbergentzia_belaunaldia": m["konbergentzia"],
         "denbora_s": m["denbora_s"],
@@ -166,8 +169,8 @@ st.caption("Batez bestekoa ± desbideratze estandarra exekuzioetan zehar. Konber
 # Metriken dentsitatea: kurba gaussiarrak (KDE)
 # ---------------------------------------------------------------------------
 st.subheader("Metriken dentsitatea")
-fig = make_subplots(rows=2, cols=2, subplot_titles=[e for _, e, _ in METRIKAK],
-                    vertical_spacing=0.16, horizontal_spacing=0.06)
+fig = make_subplots(rows=math.ceil(len(METRIKAK) / 2), cols=2, subplot_titles=[e for _, e, _ in METRIKAK],
+                    vertical_spacing=0.1, horizontal_spacing=0.06)
 for i, (zutabea, _, _) in enumerate(METRIKAK):
     r, c = divmod(i, 2)
     guztiak = df[zutabea].dropna().to_numpy(dtype=float)
@@ -198,7 +201,7 @@ for i, (zutabea, _, _) in enumerate(METRIKAK):
         fig.add_vline(x=float(balioak.mean()), line=dict(color=kolorea[alg], width=1, dash="dash"),
                       row=r + 1, col=c + 1)
     fig.update_yaxes(showticklabels=False, rangemode="tozero", row=r + 1, col=c + 1)
-fig.update_layout(height=640, margin=dict(l=10, r=10, t=40, b=10),
+fig.update_layout(height=300 * math.ceil(len(METRIKAK) / 2) + 40, margin=dict(l=10, r=10, t=40, b=10),
                   legend=dict(orientation="h", y=-0.06, x=0), hovermode="x unified")
 komuna.grafikoa_erakutsi(fig)
 st.caption("Kurba bakoitza algoritmo baten exekuzioen banaketa da (kernel gaussiarreko dentsitate-"

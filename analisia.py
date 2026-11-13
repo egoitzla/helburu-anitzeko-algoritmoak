@@ -68,6 +68,7 @@ def exekuzio_bat(algoritmoa, parametroak, hazia):
     frontea = sorted(lehen_frontea(historia[-1]))
     return {
         "hv": 100 * metrikak.hiperbolumena(frontea, ERREF_PUNTUA) / hv_optimoa,
+        "hv_balioa": metrikak.hiperbolumena(frontea, ERREF_PUNTUA),
         "igd": metrikak.igd(frontea, erref),
         "tartekatzea": metrikak.tartekatzea(frontea),
         "n_fronte": len(frontea),

@@ -81,11 +81,18 @@ def exekutatu(algoritmoa, parametroak, hazia):
             "beste": beste,
             "ez_bid": ez_bid,
             "hv": 100 * metrikak.hiperbolumena(fronte_f, ERREF_PUNTUA) / hv_optimoa,
+            "hv_balioa": metrikak.hiperbolumena(fronte_f, ERREF_PUNTUA),
             "igd": metrikak.igd(fronte_f, erref_igd),
             "n_bid": len(bideragarriak),
             "n_fronte": len(fronte),
         })
     return urratsak
+
+
+@st.cache_data
+def hv_optimoa():
+    """Benetako frontearen hiperbolumena (balio absolutua): % kalkulatzeko erreferentzia."""
+    return metrikak.hiperbolumena(benetako_frontea(), ERREF_PUNTUA)
 
 
 def konbergentzia_urratsa(urratsak, atalasea=HV_ATALASEA):

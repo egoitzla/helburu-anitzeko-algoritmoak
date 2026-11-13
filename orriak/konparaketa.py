@@ -67,6 +67,7 @@ def laburpena(urratsak):
     azkena = urratsak[-1]
     return {
         "hv": azkena["hv"],
+        "hv_balioa": azkena["hv_balioa"],
         "igd": azkena["igd"],
         "n_fronte": azkena["n_fronte"],
         "konb": komuna.konbergentzia_urratsa(urratsak),
@@ -99,13 +100,16 @@ def delta_etiketa(b, a, formatua, handiagoa_hobea=True):
 metrika_zerrenda = [
     # (etiketa, gakoa, balioaren formatua, aldearen formatua, handiagoa hobea, laguntza)
     ("Hiperbolumena", "hv", "{:.1f} %", "{:+.1f} pp", True, None),
+    ("HV (balioa)", "hv_balioa", "{:.4f}", "{:+.4f}", True, None),
     ("IGD", "igd", "{:.4f}", "{:+.4f}", False, None),
     ("1. frontean", "n_fronte", "{}", "{:+d}", True, None),
     (konb_etiketa, "konb", "{}", "{:+d}", False, konb_laguntza),
 ]
-zutabeak = st.columns(2, gap="large")
-for izena, l, zutabea in (("A", la, zutabeak[0]), ("B", lb, zutabeak[1])):
-    k = zutabea.columns(4)
+# A eta B lerro banatan: bost txartel albo batean erdiko zabaleran ez dira sartzen
+for izena, l in (("A", la), ("B", lb)):
+    etiketa_zut, *k = st.columns([0.6] + [1] * len(metrika_zerrenda), vertical_alignment="center")
+    etiketa_zut.markdown(f"#### <span style='color:{KOLOREAK[izena]}'>●</span> {izena}",
+                         unsafe_allow_html=True)
     for kol, (etiketa, gakoa, fbal, fald, handiagoa, laguntza) in zip(k, metrika_zerrenda):
         balioa = "—" if l[gakoa] is None else fbal.format(l[gakoa])
         kol.metric(etiketa, balioa, help=laguntza)
@@ -125,14 +129,17 @@ def serie(urratsak, gakoa, g):
 
 def dinamikoak(g):
     return (komuna.populazio_trazak(A[min(g, GA)]) + komuna.populazio_trazak(B[min(g, GB)])
-            + [serie(A, "hv", g), serie(B, "hv", g), serie(A, "igd", g), serie(B, "igd", g)])
+            + [serie(A, "hv", g), serie(B, "hv", g), serie(A, "hv_balioa", g),
+               serie(B, "hv_balioa", g), serie(A, "igd", g), serie(B, "igd", g)])
 
 
 fig = make_subplots(
-    rows=2, cols=2, row_heights=[0.66, 0.34],
-    horizontal_spacing=0.08, vertical_spacing=0.1,
+    rows=3, cols=2, row_heights=[0.56, 0.22, 0.22],
+    specs=[[{}, {}], [{}, {}], [{"colspan": 2}, None]],
+    horizontal_spacing=0.08, vertical_spacing=0.08,
     subplot_titles=(f"A: {konfig['A']['algoritmoa']}", f"B: {konfig['B']['algoritmoa']}",
-                    "Hiperbolumena (% optimoarekiko) ↑", "IGD: benetako frontera distantzia ↓"),
+                    "Hiperbolumena (% optimoarekiko) ↑", "Hiperbolumena (balioa) ↑",
+                    "IGD: benetako frontera distantzia ↓"),
 )
 oinarri_kop = komuna.oinarri_trazak(fig, 1, 1) + komuna.oinarri_trazak(fig, 1, 2, showlegend=False)
 
@@ -141,8 +148,9 @@ lerroa = lambda izena, legenda: dict(  # noqa: E731
     line=dict(color=KOLOREAK[izena], width=2))
 estiloak = (komuna.POPULAZIO_ESTILOAK
             + [dict(e, showlegend=False) for e in komuna.POPULAZIO_ESTILOAK]
-            + [lerroa("A", True), lerroa("B", True), lerroa("A", False), lerroa("B", False)])
-kokapenak = [(1, 1)] * 3 + [(1, 2)] * 3 + [(2, 1), (2, 1), (2, 2), (2, 2)]
+            + [lerroa("A", True), lerroa("B", True), lerroa("A", False), lerroa("B", False),
+               lerroa("A", False), lerroa("B", False)])
+kokapenak = [(1, 1)] * 3 + [(1, 2)] * 3 + [(2, 1), (2, 1), (2, 2), (2, 2), (3, 1), (3, 1)]
 hasiera = dinamikoak(0)
 for traza, estiloa, (r, c) in zip(hasiera, estiloak, kokapenak):
     traza.update(**estiloa)
@@ -155,14 +163,20 @@ fig.frames = [go.Frame(name=str(g), data=dinamikoak(g), traces=dinamiko_idx)
 komuna.populazio_ardatzak(fig, 1, 1)
 komuna.populazio_ardatzak(fig, 1, 2)
 igd_max = max((u["igd"] for u in A + B if not math.isnan(u["igd"])), default=1)
-for c in (1, 2):
-    fig.update_xaxes(range=[0, G], title_text=urrats_izena, row=2, col=c)
+hv_opt = komuna.hv_optimoa()
+for r, c in ((2, 1), (2, 2), (3, 1)):
+    fig.update_xaxes(range=[0, G], row=r, col=c)
+fig.update_xaxes(title_text=urrats_izena, row=3, col=1)
 fig.update_yaxes(range=[0, 105], ticksuffix=" %", row=2, col=1)
-fig.update_yaxes(range=[0, igd_max * 1.05], row=2, col=2)
+fig.update_yaxes(range=[0, hv_opt * 1.05], row=2, col=2)
+fig.add_hline(y=hv_opt, line=dict(dash="dash", width=1, color="#9aa0a6"),
+              annotation_text=f"optimoa {hv_opt:.4f}", annotation_position="bottom right",
+              row=2, col=2)
+fig.update_yaxes(range=[0, igd_max * 1.05], row=3, col=1)
 
 goiko_behea = fig.layout.yaxis.domain[0]
 fig.update_layout(
-    height=1000,
+    height=1150,
     margin=dict(t=40, l=60, r=20, b=40),
     legend=dict(x=0.01, y=goiko_behea + 0.01, xanchor="left", yanchor="bottom",
                 bgcolor="rgba(127,127,127,0.15)"),
