@@ -32,8 +32,7 @@ POPULAZIO_ESTILOAK = [
     dict(name="1. frontea (ez-menderatuak)", mode="markers",
          marker=dict(size=8, color=KOLOREAK["fronte"], line=dict(width=0.5, color="white"))),
     dict(name="Artxiboa", mode="markers",
-         marker=dict(symbol="circle-open", size=11, color=KOLOREAK["artxiboa"],
-                     line=dict(width=2))),
+         marker=dict(size=8, color=KOLOREAK["artxiboa"], line=dict(width=0.5, color="white"))),
 ]
 
 

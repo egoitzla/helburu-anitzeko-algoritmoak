@@ -156,8 +156,8 @@ with st.expander("Nola irakurri"):
   populazioa ilargi-erdi grisaren barruan sartzen da.
 - **Ondoren**: gurutzaketak eta mutazioak puntuak $C_1$-en ertz uhindura aldera bultzatzen
   dituzte, eta dibertsitate-mekanismoak frontearen zati guztietan banatzen ditu.
-- **Kanpoko artxiboa duten algoritmoetan (SPEA2)**: puntu beteak belaunaldi horretako
-  populazioa dira, eta **zirkulu more hutsak artxiboa**. Artxiboa da algoritmoaren emaitza,
+- **Kanpoko artxiboa duten algoritmoetan (SPEA2)**: puntu gris, urdin eta gorriak belaunaldi horretako
+  populazioa dira, eta **puntu moreak artxiboa**. Artxiboa da algoritmoaren emaitza,
   eta metrikak (hiperbolumena, IGD, 1. frontean) harekin kalkulatzen dira.
 
 **Metrikak** (eskuinean, animazioarekin batera hazten dira)
