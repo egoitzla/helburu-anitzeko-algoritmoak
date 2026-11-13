@@ -34,7 +34,7 @@ Algoritmo guztiak Python estandarrarekin idatzita daude (`math`, `random`).
 |---|---|
 | **Hasiera** | Problema, eskualde bideragarria, benetako Pareto frontea eta algoritmoen aurkezpena. |
 | **Bilakaera** | Algoritmo bat konfiguratu eta exekutatu; populazioa eta metrikak (hiperbolumena, IGD) belaunaldiz belaunaldi animatuta. |
-| **Konparaketa** | Bi algoritmo edo konfigurazio alboz albo, animazio sinkronizatu batean. |
+| **Konparaketa** | 2–6 algoritmo edo konfigurazio animazio sinkronizatu batean: populazio bakoitza bere grafikoan, metrikak gainjarrita eta fronte guztiak plano berean, koloreen bidez bereizita. |
 | **Dentsitatea** | Hainbat algoritmo N aldiz exekutatu prozesu paraleloetan (hazi berdinekin): metriken eta fronteko soluzioen dentsitate gaussiarrak, laburpen-taula eta CSV deskarga (lerro bat exekuzioko). |
 
 ### Exekutatu

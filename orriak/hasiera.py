@@ -84,8 +84,9 @@ with a.container(border=True):
              "CSV gisa deskarga daiteke.")
 with b.container(border=True):
     st.page_link("orriak/konparaketa.py", label="**Konparaketa**", icon=":material/compare:")
-    st.write("Bi algoritmo edo konfigurazio alboz albo, animazio sinkronizatu batean. Metrikak "
-             "gainjarrita eta B-ren aldeak A-rekiko.")
+    st.write("Bi algoritmo edo konfigurazio edo gehiago (gehienez sei) animazio sinkronizatu "
+             "batean: populazio bakoitza bere grafikoan, metrikak gainjarrita, aldeak A-rekiko eta "
+             "fronte guztiak plano berean, koloreen bidez bereizita.")
 with c.container(border=True):
     st.page_link("orriak/dentsitatea.py", label="**Dentsitatea**", icon=":material/bubble_chart:")
     st.write("Hainbat algoritmo N aldiz exekutatu, paraleloan eta hazi berdinekin: metriken "

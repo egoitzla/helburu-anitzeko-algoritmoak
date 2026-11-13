@@ -1,5 +1,7 @@
 """
-Bi algoritmo (edo konfigurazio) alboz albo konparatu, animazio sinkronizatu batean.
+Hainbat algoritmo (edo konfigurazio) konparatu, animazio sinkronizatu batean:
+konfigurazio bakoitzaren populazioa bere grafikoan, metrikak gainjarrita, eta
+fronte guztiak plano berean, koloreen bidez bereizita.
 """
 import math
 
@@ -9,59 +11,99 @@ from plotly.subplots import make_subplots
 
 import komuna
 from algoritmoak import ALGORITMOAK
-from komuna import KOLOREAK, HV_ATALASEA
+from komuna import HV_ATALASEA
 
-st.title("Bi algoritmoren konparaketa")
+MIN_KONF, MAX_KONF = 2, 6
+IZENAK = "ABCDEF"
+KONF_KOLOREAK = ["#2a9d8f", "#f58518", "#17becf", "#e377c2", "#bcbd22", "#8c564b"]
+ALGORITMO_IZENAK = list(ALGORITMOAK)
+
+
+def lehenetsiak(i):
+    """i. konfigurazioaren algoritmoa eta parametro lehenetsiak (A eta B lehen bezala)."""
+    if i == 1:
+        return 0, {"eta_c": 5, "eta_m": 5}          # B: NSGA-II, η txikiekin
+    if i >= 2:
+        return (i - 1) % len(ALGORITMO_IZENAK), {}   # C: SPEA2, D: DE (GDE3), ...
+    return 0, {}
+
+
+def burua(i, testua=""):
+    return (f"#### <span style='color:{KONF_KOLOREAK[i]}'>●</span> {IZENAK[i]}"
+            + (f" <span style='font-weight:400;font-size:0.9rem'>{testua}</span>" if testua else ""))
+
+
+st.title("Algoritmoen konparaketa")
 st.caption(
-    "Bi algoritmo edo konfigurazio alboz albo, urrats berean. Algoritmo bakarra badago ere, "
+    "Bi algoritmo edo gehiago (gehienez sei) urrats berean. Algoritmo bakarra badago ere, "
     "parametro desberdinekin konpara daiteke (adib. η txikiak = esplorazio handiagoa)."
 )
-
-komuna.albo_edukiontzia().caption("A eta B konfigurazioak orri nagusian aukeratzen dira.")
+komuna.albo_edukiontzia().caption("Konfigurazioak orri nagusian aukeratzen dira.")
 
 # ---------------------------------------------------------------------------
-# A eta B konfigurazioak
+# Konfigurazioak
 # ---------------------------------------------------------------------------
-LEHENETSIAK = {"A": {}, "B": {"eta_c": 5, "eta_m": 5}}
+st.session_state.setdefault("konp-kop", MIN_KONF)
+kop = st.session_state["konp-kop"]
 
-hautatuak, oraingoa = {}, {}
+hautatuak, oraingoa = [], {}
 with st.expander("Konfigurazioak", expanded=True):
+    b1, b2, _ = st.columns([1.5, 1.2, 3.3])
+    if b1.button("＋ Konfigurazioa gehitu", disabled=kop >= MAX_KONF, width="stretch"):
+        st.session_state["konp-kop"] = kop + 1
+        st.rerun()
+    if b2.button("－ Azkena kendu", disabled=kop <= MIN_KONF, width="stretch"):
+        st.session_state["konp-kop"] = kop - 1
+        st.rerun()
+
+    zut_kop = min(kop, 3)
     # Algoritmoak formulariotik kanpo: parametro-zerrenda algoritmoaren araberakoa da
-    for izena, zutabea in zip("AB", st.columns(2, gap="large")):
-        with zutabea:
-            st.markdown(f"#### <span style='color:{KOLOREAK[izena]}'>●</span> {izena}",
-                        unsafe_allow_html=True)
-            hautatuak[izena], _ = komuna.algoritmo_hautatzailea(zutabea, f"konp-{izena}")
+    for hasiera in range(0, kop, zut_kop):
+        for i, zutabea in zip(range(hasiera, min(hasiera + zut_kop, kop)),
+                              st.columns(zut_kop, gap="large")):
+            with zutabea:
+                st.markdown(burua(i), unsafe_allow_html=True)
+                alg, _ = komuna.algoritmo_hautatzailea(zutabea, f"konp-{IZENAK[i]}",
+                                                       lehenetsiak(i)[0])
+                hautatuak.append(alg)
+
     # Formularioa: parametroak aldatzean ez da ezer exekutatzen botoia sakatu arte
     with st.form("konp-formularioa", border=False):
-        for izena, zutabea in zip("AB", st.columns(2, gap="large")):
-            with zutabea:
-                parametroak, hazia = komuna.parametro_widgetak(
-                    f"konp-{izena}", hautatuak[izena], LEHENETSIAK[izena])
-                oraingoa[izena] = (hautatuak[izena], parametroak, hazia)
-        sakatuta = st.form_submit_button("▶ Biak exekutatu", type="primary", width="stretch")
+        for hasiera in range(0, kop, zut_kop):
+            for i, zutabea in zip(range(hasiera, min(hasiera + zut_kop, kop)),
+                                  st.columns(zut_kop, gap="large")):
+                with zutabea:
+                    st.markdown(burua(i, hautatuak[i]), unsafe_allow_html=True)
+                    parametroak, hazia = komuna.parametro_widgetak(
+                        f"konp-{IZENAK[i]}", hautatuak[i], lehenetsiak(i)[1])
+                    oraingoa[IZENAK[i]] = (hautatuak[i], parametroak, hazia)
+        sakatuta = st.form_submit_button("▶ Guztiak exekutatu", type="primary", width="stretch")
 
 exekutatua = komuna.exekutatutako_konfigurazioa("konp-konfig", oraingoa, sakatuta)
 if exekutatua is None:
-    st.info("A eta B konfiguratu eta sakatu **▶ Biak exekutatu** algoritmoak exekutatzeko.",
+    st.info("Konfigurazioak aukeratu eta sakatu **▶ Guztiak exekutatu** algoritmoak exekutatzeko.",
             icon=":material/tune:")
     st.stop()
-konfig = {}
-for izena, (algoritmoa, parametroak, hazia) in exekutatua.items():
-    konfig[izena] = {"algoritmoa": algoritmoa, "info": ALGORITMOAK[algoritmoa],
-                     "urratsak": komuna.exekutatu(algoritmoa, parametroak, hazia)}
+
+konfig = []
+for i, (izena, (algoritmoa, parametroak, hazia)) in enumerate(exekutatua.items()):
+    konfig.append({"izena": izena, "kolorea": KONF_KOLOREAK[i], "algoritmoa": algoritmoa,
+                   "info": ALGORITMOAK[algoritmoa],
+                   "urratsak": komuna.exekutatu(algoritmoa, parametroak, hazia)})
 st.caption("Erabilitako haziak: " + " · ".join(
     f"{izena} = **{h}**" for izena, (_, _, h) in exekutatua.items()))
 
-A, B = konfig["A"]["urratsak"], konfig["B"]["urratsak"]
-GA, GB = len(A) - 1, len(B) - 1
-G = max(GA, GB)
-urrats_izena = (konfig["A"]["info"]["urratsa"]
-                if konfig["A"]["info"]["urratsa"] == konfig["B"]["info"]["urratsa"] else "Urratsa")
+N = len(konfig)
+for k in konfig:
+    k["G"] = len(k["urratsak"]) - 1
+    k["etiketa"] = f"{k['izena']}: {k['algoritmoa']}"
+G = max(k["G"] for k in konfig)
+urrats_motak = {k["info"]["urratsa"] for k in konfig}
+urrats_izena = urrats_motak.pop() if len(urrats_motak) == 1 else "Urratsa"
 
 
 # ---------------------------------------------------------------------------
-# Azken emaitzak: B-ren deltak A-rekiko
+# Azken emaitzak: besteen aldeak A-rekiko
 # ---------------------------------------------------------------------------
 def laburpena(urratsak):
     azkena = urratsak[-1]
@@ -74,7 +116,6 @@ def laburpena(urratsak):
     }
 
 
-la, lb = laburpena(A), laburpena(B)
 konb_etiketa = f"HV ≥ {HV_ATALASEA:.0f} %"
 konb_laguntza = (f"Hiperbolumenak {HV_ATALASEA:.0f} % lehen aldiz gainditzen duen "
                  f"{urrats_izena.lower()}a. Txikiagoa = azkarrago konbergitzen du.")
@@ -84,7 +125,7 @@ DELTA_KOLOREAK = ({"hobea": "#1a7f37", "okerragoa": "#cf222e", "berdin": "#6e778
 
 
 def delta_etiketa(b, a, formatua, handiagoa_hobea=True):
-    """B-ren aldea A-rekiko, koloreztatuta (st.metric-en deltak ez dira modu argira egokitzen)."""
+    """Konfigurazio baten aldea A-rekiko, koloreztatuta."""
     if a is None or b is None:
         return "&nbsp;"
     aldea = b - a
@@ -105,92 +146,150 @@ metrika_zerrenda = [
     ("1. frontean", "n_fronte", "{}", "{:+d}", True, None),
     (konb_etiketa, "konb", "{}", "{:+d}", False, konb_laguntza),
 ]
-# A eta B lerro banatan: bost txartel albo batean erdiko zabaleran ez dira sartzen
-for izena, l in (("A", la), ("B", lb)):
-    etiketa_zut, *k = st.columns([0.6] + [1] * len(metrika_zerrenda), vertical_alignment="center")
-    etiketa_zut.markdown(f"#### <span style='color:{KOLOREAK[izena]}'>●</span> {izena}",
-                         unsafe_allow_html=True)
-    for kol, (etiketa, gakoa, fbal, fald, handiagoa, laguntza) in zip(k, metrika_zerrenda):
+laburpenak = [laburpena(k["urratsak"]) for k in konfig]
+for i, (k, l) in enumerate(zip(konfig, laburpenak)):
+    etiketa_zut, *kolak = st.columns([1] + [1] * len(metrika_zerrenda), vertical_alignment="center")
+    etiketa_zut.markdown(burua(i, k["algoritmoa"]), unsafe_allow_html=True)
+    for kol, (etiketa, gakoa, fbal, fald, handiagoa, laguntza) in zip(kolak, metrika_zerrenda):
         balioa = "—" if l[gakoa] is None else fbal.format(l[gakoa])
         kol.metric(etiketa, balioa, help=laguntza)
-        if izena == "B":
-            kol.markdown(delta_etiketa(l[gakoa], la[gakoa], fald, handiagoa),
+        if i > 0:
+            kol.markdown(delta_etiketa(l[gakoa], laburpenak[0][gakoa], fald, handiagoa),
                          unsafe_allow_html=True)
-st.caption("B-ren azpiko aldeak A-rekiko dira. Berdea = B hobea, gorria = B okerragoa.")
+st.caption("Azpiko aldeak A-rekiko dira. Berdea = A baino hobea, gorria = okerragoa.")
 
 
-# ---------------------------------------------------------------------------
-# Irudi animatua: goian bi populazioak, behean metrikak gainjarrita
-# ---------------------------------------------------------------------------
 def serie(urratsak, gakoa, g):
     g = min(g, len(urratsak) - 1)
     return go.Scatter(x=list(range(g + 1)), y=[u[gakoa] for u in urratsak[: g + 1]])
 
 
-def dinamikoak(g):
-    return (komuna.populazio_trazak(A[min(g, GA)]) + komuna.populazio_trazak(B[min(g, GB)])
-            + [serie(A, "hv", g), serie(B, "hv", g), serie(A, "hv_balioa", g),
-               serie(B, "hv_balioa", g), serie(A, "igd", g), serie(B, "igd", g)])
+# ---------------------------------------------------------------------------
+# 1. irudia: populazio bakoitza bere grafikoan, eta metrikak gainjarrita
+# ---------------------------------------------------------------------------
+st.subheader("Populazioak eta metrikak")
+zut = min(N, 3)
+pop_errenkadak = math.ceil(N / zut)
+metrika_errenkadak = [("hv", "Hiperbolumena (% optimoarekiko) ↑"),
+                      ("hv_balioa", "Hiperbolumena (balioa) ↑"),
+                      ("igd", "IGD: benetako frontera distantzia ↓")]
+errenkadak = pop_errenkadak + len(metrika_errenkadak)
+pop_kokapenak = [(i // zut + 1, i % zut + 1) for i in range(N)]
 
-
+izenburuak = [k["etiketa"] for k in konfig] + [""] * (pop_errenkadak * zut - N)
+izenburuak += [e for _, e in metrika_errenkadak]
+specs = ([[{} for _ in range(zut)] for _ in range(pop_errenkadak)]
+         + [[{"colspan": zut}] + [None] * (zut - 1) for _ in metrika_errenkadak])
+pop_altuera, metrika_altuera = 420, 220
 fig = make_subplots(
-    rows=3, cols=2, row_heights=[0.56, 0.22, 0.22],
-    specs=[[{}, {}], [{}, {}], [{"colspan": 2}, None]],
-    horizontal_spacing=0.08, vertical_spacing=0.08,
-    subplot_titles=(f"A: {konfig['A']['algoritmoa']}", f"B: {konfig['B']['algoritmoa']}",
-                    "Hiperbolumena (% optimoarekiko) ↑", "Hiperbolumena (balioa) ↑",
-                    "IGD: benetako frontera distantzia ↓"),
+    rows=errenkadak, cols=zut, specs=specs, subplot_titles=izenburuak,
+    row_heights=[pop_altuera] * pop_errenkadak + [metrika_altuera] * len(metrika_errenkadak),
+    horizontal_spacing=0.06, vertical_spacing=0.06 if errenkadak <= 4 else 0.045,
 )
-oinarri_kop = komuna.oinarri_trazak(fig, 1, 1) + komuna.oinarri_trazak(fig, 1, 2, showlegend=False)
+oinarri_kop = sum(komuna.oinarri_trazak(fig, r, c, showlegend=(i == 0))
+                  for i, (r, c) in enumerate(pop_kokapenak))
 
-lerroa = lambda izena, legenda: dict(  # noqa: E731
-    name=izena, mode="lines", showlegend=legenda, legend="legend2",
-    line=dict(color=KOLOREAK[izena], width=2))
-artxiboa_du = any(u["artxiboa"] for u in A + B)
-# Populazioaren legenda ezkutatu bi konfigurazioek artxiboa badute eta populazioa ezkutuan badago
-bietan_artxiboa = any(u["artxiboa"] for u in A) and any(u["artxiboa"] for u in B)
-estiloak = (komuna.populazio_estiloak(
-                artxiboa_du,
-                populazioa_ezkutuan=bietan_artxiboa and not komuna.aukerak()["populazioa"])
-            + komuna.populazio_estiloak(artxiboa_du, legenda=False)
-            + [lerroa("A", True), lerroa("B", True), lerroa("A", False), lerroa("B", False),
-               lerroa("A", False), lerroa("B", False)])
-kokapenak = [(1, 1)] * 4 + [(1, 2)] * 4 + [(2, 1), (2, 1), (2, 2), (2, 2), (3, 1), (3, 1)]
-hasiera = dinamikoak(0)
-for traza, estiloa, (r, c) in zip(hasiera, estiloak, kokapenak):
+artxiboa_du = any(u["artxiboa"] for k in konfig for u in k["urratsak"])
+denetan_artxiboa = all(any(u["artxiboa"] for u in k["urratsak"]) for k in konfig)
+populazio_estiloak = komuna.populazio_estiloak(
+    artxiboa_du, populazioa_ezkutuan=denetan_artxiboa and not komuna.aukerak()["populazioa"])
+
+
+def dinamikoak(g):
+    trazak = []
+    for k in konfig:
+        trazak += komuna.populazio_trazak(k["urratsak"][min(g, k["G"])])
+    for gakoa, _ in metrika_errenkadak:
+        trazak += [serie(k["urratsak"], gakoa, g) for k in konfig]
+    return trazak
+
+
+estiloak, kokapenak = [], []
+for i, (r, c) in enumerate(pop_kokapenak):
+    estiloak += populazio_estiloak if i == 0 else komuna.populazio_estiloak(artxiboa_du, legenda=False)
+    kokapenak += [(r, c)] * 4
+for m, _ in enumerate(metrika_errenkadak):
+    for k in konfig:
+        estiloak.append(dict(name=k["etiketa"], mode="lines", showlegend=(m == 0),
+                             legend="legend2", line=dict(color=k["kolorea"], width=2)))
+        kokapenak.append((pop_errenkadak + m + 1, 1))
+
+hasierakoak = dinamikoak(0)
+for traza, estiloa, (r, c) in zip(hasierakoak, estiloak, kokapenak):
     traza.update(**estiloa)
     fig.add_trace(traza, row=r, col=c)
-dinamiko_idx = list(range(oinarri_kop, oinarri_kop + len(hasiera)))
-
+dinamiko_idx = list(range(oinarri_kop, oinarri_kop + len(hasierakoak)))
 fig.frames = [go.Frame(name=str(g), data=dinamikoak(g), traces=dinamiko_idx)
               for g in range(G + 1)]
 
-komuna.populazio_ardatzak(fig, 1, 1)
-komuna.populazio_ardatzak(fig, 1, 2)
-igd_max = max((u["igd"] for u in A + B if not math.isnan(u["igd"])), default=1)
+for r, c in pop_kokapenak:
+    komuna.populazio_ardatzak(fig, r, c)
 hv_opt = komuna.hv_optimoa()
-for r, c in ((2, 1), (2, 2), (3, 1)):
-    fig.update_xaxes(range=[0, G], row=r, col=c)
-fig.update_xaxes(title_text=urrats_izena, row=3, col=1)
-fig.update_yaxes(range=[0, 105], ticksuffix=" %", row=2, col=1)
-fig.update_yaxes(range=[0, hv_opt * 1.05], row=2, col=2)
+igd_max = max((u["igd"] for k in konfig for u in k["urratsak"] if not math.isnan(u["igd"])),
+              default=1)
+tarteak = {"hv": [0, 105], "hv_balioa": [0, hv_opt * 1.05], "igd": [0, igd_max * 1.05]}
+for m, (gakoa, _) in enumerate(metrika_errenkadak):
+    r = pop_errenkadak + m + 1
+    fig.update_xaxes(range=[0, G], row=r, col=1)
+    fig.update_yaxes(range=tarteak[gakoa], ticksuffix=" %" if gakoa == "hv" else None, row=r, col=1)
+fig.update_xaxes(title_text=urrats_izena, row=errenkadak, col=1)
 fig.add_hline(y=hv_opt, line=dict(dash="dash", width=1, color="#9aa0a6"),
               annotation_text=f"optimoa {hv_opt:.4f}", annotation_position="bottom right",
-              row=2, col=2)
-fig.update_yaxes(range=[0, igd_max * 1.05], row=3, col=1)
+              row=pop_errenkadak + 2, col=1)
 
-goiko_behea = fig.layout.yaxis.domain[0]
+guztira = pop_altuera * pop_errenkadak + metrika_altuera * len(metrika_errenkadak) + 120
+behea_pop = fig.get_subplot(pop_errenkadak, 1).yaxis.domain[0]
 fig.update_layout(
-    height=1150,
+    height=guztira,
     margin=dict(t=40, l=60, r=20, b=40),
-    legend=dict(x=0.01, y=goiko_behea + 0.01, xanchor="left", yanchor="bottom",
+    legend=dict(x=0.01, y=behea_pop + 0.005, xanchor="left", yanchor="bottom",
                 bgcolor="rgba(127,127,127,0.15)"),
-    legend2=dict(x=0.45, y=0.02, xanchor="right", yanchor="bottom", orientation="h",
-                 bgcolor="rgba(127,127,127,0.15)"),
+    legend2=dict(x=0.99, y=1.0, xanchor="right", yanchor="bottom", orientation="h",
+                 yref="paper", bgcolor="rgba(127,127,127,0.15)"),
 )
+# Lerroen legenda lehen metrika-grafikoaren izenburuaren gainean, ez zapaltzeko
+fig.update_layout(legend2=dict(
+    y=fig.get_subplot(pop_errenkadak + 1, 1).yaxis.domain[1] + 30 / guztira * 1.0 + 0.004))
 komuna.animazio_kontrolak(fig, G, urrats_izena)
 komuna.grafikoa_erakutsi(fig)
 
-if GA != GB:
-    st.info(f"A-k {GA} eta B-k {GB} {urrats_izena.lower()} ditu: laburrenak bere azken "
-            "egoeran jarraitzen du besteak amaitu arte.")
+if len({k["G"] for k in konfig}) > 1:
+    st.info(f"Konfigurazioek {urrats_izena.lower()} kopuru desberdina dute: laburrenak bere "
+            "azken egoeran jarraitzen du besteak amaitu arte.")
+
+# ---------------------------------------------------------------------------
+# 2. irudia: fronte guztiak plano berean
+# ---------------------------------------------------------------------------
+st.subheader("Denak plano berean")
+st.caption("Konfigurazio bakoitzaren 1. frontea (artxiboa duten algoritmoetan, artxiboarena) "
+           "helburuen espazio berean, bere kolorearekin, urratsez urrats.")
+
+
+def fronte_trazak(g):
+    trazak = []
+    for k in konfig:
+        u = k["urratsak"][min(g, k["G"])]
+        x, y = komuna.puntuak(u["fronte_csv"])
+        trazak.append(go.Scatter(x=x, y=y))
+    return trazak
+
+
+fig2 = go.Figure()
+fig2.set_subplots(rows=1, cols=1)
+oinarri2 = komuna.oinarri_trazak(fig2, 1, 1)
+for traza, k in zip(fronte_trazak(0), konfig):
+    traza.update(name=k["etiketa"], mode="markers",
+                 marker=dict(size=8, color=k["kolorea"], line=dict(width=0.5, color="white")),
+                 hovertemplate=f"{k['etiketa']}<br>f₁ %{{x:.3f}}<br>f₂ %{{y:.3f}}<extra></extra>")
+    fig2.add_trace(traza, row=1, col=1)
+fig2.frames = [go.Frame(name=str(g), data=fronte_trazak(g),
+                        traces=list(range(oinarri2, oinarri2 + N)))
+               for g in range(G + 1)]
+komuna.populazio_ardatzak(fig2, 1, 1)
+fig2.update_layout(
+    height=680, margin=dict(t=20, l=60, r=20, b=40),
+    legend=dict(x=0.01, y=0.01, xanchor="left", yanchor="bottom",
+                bgcolor="rgba(127,127,127,0.15)"),
+)
+komuna.animazio_kontrolak(fig2, G, urrats_izena)
+komuna.grafikoa_erakutsi(fig2)

@@ -143,10 +143,11 @@ def albo_edukiontzia():
     return st.session_state["parametroen_lekua"]
 
 
-def algoritmo_hautatzailea(edukiontzia, gakoa):
+def algoritmo_hautatzailea(edukiontzia, gakoa, lehenetsia=0):
     """Algoritmoa aukeratzeko widgeta (formulariotik kanpo: parametro-zerrenda
     algoritmoaren araberakoa da). Itzultzen du: (algoritmoa, info)."""
-    algoritmoa = edukiontzia.selectbox("Algoritmoa", list(ALGORITMOAK), key=f"{gakoa}-alg")
+    algoritmoa = edukiontzia.selectbox("Algoritmoa", list(ALGORITMOAK), index=lehenetsia,
+                                       key=f"{gakoa}-alg")
     info = ALGORITMOAK[algoritmoa]
     edukiontzia.caption(info["deskribapena"])
     return algoritmoa, info
