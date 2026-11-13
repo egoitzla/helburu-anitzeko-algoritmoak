@@ -92,7 +92,7 @@ ALGORITMOAK = {
         "parametroak": [
             ("n", "Populazioaren tamaina (NP)", 20, 300, gde3.POP_TAMAINA, 10),
             ("belaunaldiak", "Belaunaldiak", 10, 400, gde3.BELAUNALDIAK, 10),
-            ("F", "Eskala-faktorea F", 0.05, 1.0, gde3.F, 0.05),
+            ("F", "Eskala-faktorea F", 0.0, 1.0, gde3.F, 0.05),
             ("CR", "Gurutzaketa probabilitatea CR", 0.0, 1.0, gde3.CR, 0.05),
         ],
         "exekutatu": _gde3_exekutatu,

@@ -30,7 +30,7 @@ from nsga2 import BEHE_MUGA, EZ_BIDERAGARRIA, GOI_MUGA, ebaluatu, menderatzen_du
 # ---------------------------------------------------------------------------
 POP_TAMAINA = 100        # Populazioaren tamaina (NP)
 BELAUNALDIAK = 200       # Belaunaldi kopurua
-F = 0.5                  # Eskala-faktorea, (0, 1] tartean
+F = 0.5                  # Eskala-faktorea, [0, 1] tartean (0 = diferentziarik gabe: v = x_r1)
 CR = 0.9                 # Gurutzaketa-probabilitatea (posizio bakoitzeko)
 HAZIA = random.randrange(1_000_000)  # Ausazko hazia (finkatu, adib. 1, emaitza errepikatzeko)
 
